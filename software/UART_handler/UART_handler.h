@@ -20,5 +20,6 @@
 #include <string.h>
 
 void GPRMS_Analyze(uint8_t *Data_from_GPS);
+uint8_t *coordinates_packet(void);
 
 #endif

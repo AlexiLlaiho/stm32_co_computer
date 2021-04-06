@@ -71,6 +71,7 @@ uint8_t str2[] = {0x01, 0x02, 0x03, 0x04};
 uint8_t str3[] = "$GPRMC,124117.600,A,4712.9530,N,03855.6616,E,0.95,35.09,010421,,,A*5E";
 uint8_t rgps_data[75] = {0};
 uint8_t rgcs_data[75] = {0};
+uint8_t to_pc_gps_data[15] = "test message! ";
 uint8_t incr_i = 0, rgps_i = 0;
 /* USER CODE END PFP */
 
@@ -133,7 +134,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 256);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 512);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   osThreadDef(ledTask, StartLedTask, osPriorityNormal, 0, 128);
@@ -143,6 +144,9 @@ int main(void)
   /* add threads, ... */
   HAL_UART_Receive_IT(&huart1, rgps_data, 1);
   HAL_UART_Transmit_IT (&huart2, str1, 1);
+  uint8_t *p_buff = to_pc_gps_data;
+  HAL_UART_Transmit_IT (&huart3, p_buff, strlen(to_pc_gps_data));
+  HAL_UART_Receive_IT(&huart3, rgps_data, 1);
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -368,24 +372,30 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	if (*(rgps_data + rgps_i) == '$') // $
+	if (huart->Instance == USART1)
 	{
-		start_byte = true;
-		end_byte = false;
-		++rgps_i;
+		if (*(rgps_data + rgps_i) == '$') // $
+		{
+			start_byte = true;
+			end_byte = false;
+			++rgps_i;
+		}
+		else if ((start_byte) && (*(rgps_data + rgps_i) != 0x2A)) //*
+		{
+			++rgps_i;
+		}
+		else if ((start_byte) && (*(rgps_data + rgps_i) == '*'))
+		{
+			start_byte = false;
+			end_byte = true;
+			rgps_i = 0;
+		}
+		HAL_UART_Receive_IT(&huart1, (rgps_data + rgps_i), 1);
 	}
-	else if ((start_byte) && (*(rgps_data + rgps_i) != 0x2A)) //*
+	else if(huart->Instance == USART3)
 	{
-		++rgps_i;
+		HAL_UART_Receive_IT(&huart3, rgcs_data, 1);
 	}
-	else if ((start_byte) && (*(rgps_data + rgps_i) == '*'))
-	{
-		GPRMS_Analyze(rgps_data);
-		start_byte = false;
-		end_byte = true;
-		rgps_i = 0;
-	}
-	HAL_UART_Receive_IT(&huart1, (rgps_data + rgps_i), 1);
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
@@ -394,7 +404,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
   {
 	  if(incr_i == 0)
 	  {
-		  HAL_UART_Transmit_IT(&huart2, str3, strlen(str3));
+		  HAL_UART_Transmit_IT(&huart2, str3, 10);
 		  ++incr_i;
 	  }
 	  else if(incr_i == 1)
@@ -402,6 +412,10 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 		  HAL_UART_Transmit_IT(&huart2, str1, strlen(str1));
 		  incr_i = 0;
 	  }
+  }
+  else if(huart->Instance == USART3)
+  {
+
   }
 }
 
@@ -441,15 +455,10 @@ void StartDefaultTask(void const *argument)
 	{
 		if(end_byte == true)
 		{
-//			GPRMS_Analyze(rgps_data);
+			GPRMS_Analyze(rgps_data);
+			uint8_t *p_coordinates_packet = coordinates_packet();
+			HAL_UART_Transmit_IT(&huart3, p_coordinates_packet, 50);
 		}
-
-//		int count = sizeof(rgps_data) / sizeof(rgps_data[0]);
-//		for (int y = 0; y < count; y++)
-//		{
-//			*(rgps_data + y) = 0;
-//		}
-
 		osDelay(1);
 	}
 	/* USER CODE END 5 */
@@ -466,6 +475,7 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+	  asm("nop");
   }
   /* USER CODE END Error_Handler_Debug */
 }
