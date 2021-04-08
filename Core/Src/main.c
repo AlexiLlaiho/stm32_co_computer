@@ -456,8 +456,9 @@ void StartDefaultTask(void const *argument)
 		if(end_byte == true)
 		{
 			GPRMS_Analyze(rgps_data);
-			uint8_t *p_coordinates_packet = coordinates_packet();
-			HAL_UART_Transmit_IT(&huart3, p_coordinates_packet, 50);
+			uint8_t lenght = 0;
+			uint8_t *p_coordinates_packet = raw_data_packet(&lenght);
+			HAL_UART_Transmit_IT(&huart3, p_coordinates_packet, lenght);
 		}
 		osDelay(1);
 	}

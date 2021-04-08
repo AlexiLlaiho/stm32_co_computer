@@ -18,8 +18,10 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 void GPRMS_Analyze(uint8_t *Data_from_GPS);
 uint8_t *coordinates_packet(void);
+uint8_t *raw_data_packet(uint8_t *size);
 
 #endif
