@@ -65,14 +65,14 @@ void StartDefaultTask(void const * argument);
 void StartLedTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
-bool start_byte = false, end_byte = false;
+bool start_byte = false, end_byte = false, gsb = false, geb = false;
 uint8_t str1[] = "$GPGGA,124117.600,4712.9530,N,03855.6616,E,1,3,3.38,-8.0,M,16.4,M,,*74";
 uint8_t str2[] = {0x01, 0x02, 0x03, 0x04};
 uint8_t str3[] = "$GPRMC,124117.600,A,4712.9530,N,03855.6616,E,0.95,35.09,010421,,,A*5E";
 uint8_t rgps_data[75] = {0};
 uint8_t rgcs_data[75] = {0};
 uint8_t to_pc_gps_data[15] = "test message! ";
-uint8_t incr_i = 0, rgps_i = 0;
+uint8_t incr_i = 0, rgps_i = 0, rgcs_i = 0;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -392,9 +392,25 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		}
 		HAL_UART_Receive_IT(&huart1, (rgps_data + rgps_i), 1);
 	}
-	else if(huart->Instance == USART3)
+	else if (huart->Instance == USART3)
 	{
-		HAL_UART_Receive_IT(&huart3, rgcs_data, 1);
+		if (*(rgcs_data + rgcs_i) == '@') // $
+		{
+			gsb = true;
+			geb = false;
+			++rgcs_i;
+		}
+		else if ((start_byte) && (*(rgcs_data + rgcs_i) != '\n')) //*
+		{
+			++rgcs_i;
+		}
+		else if ((start_byte) && (*(rgcs_data + rgcs_i) == '\n'))
+		{
+			gsb = false;
+			geb = true;
+			rgcs_i = 0;
+		}
+		HAL_UART_Receive_IT(&huart3, (rgcs_data + rgcs_i), 1);
 	}
 }
 
@@ -457,8 +473,12 @@ void StartDefaultTask(void const *argument)
 		{
 			GPRMS_Analyze(rgps_data);
 			uint8_t lenght = 0;
-			uint8_t *p_coordinates_packet = raw_data_packet(&lenght);
+			uint8_t *p_coordinates_packet = coordinates_packet(&lenght);
 			HAL_UART_Transmit_IT(&huart3, p_coordinates_packet, lenght);
+		}
+		if(geb == true)
+		{
+			coord_pckt_frm_gcs(rgcs_data);
 		}
 		osDelay(1);
 	}

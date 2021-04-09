@@ -1,3 +1,5 @@
-UART_handler.c:13:6:GPRMS_Analyze	56	static
-UART_handler.c:30:10:coordinates_packet	64	static
-UART_handler.c:37:10:raw_data_packet	40	static
+UART_handler.c:24:6:GPRMS_Analyze	56	static
+UART_handler.c:41:10:coordinates_packet	64	static
+UART_handler.c:52:6:coord_pckt_frm_gcs	136	static
+UART_handler.c:78:10:raw_data_packet	40	static
+UART_handler.c:104:9:calc_checksum	24	static
