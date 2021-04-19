@@ -126,4 +126,3 @@ ProjectManager.DeviceId=STM32F103C8Tx
 PB12.Signal=GPIO_Output
 ProjectManager.LibraryCopy=1
 PA3.Signal=USART2_RX
-isbadioc=false

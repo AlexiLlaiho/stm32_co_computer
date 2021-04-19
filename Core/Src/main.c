@@ -66,13 +66,15 @@ void StartLedTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 bool start_byte = false, end_byte = false, gsb = false, geb = false;
-uint8_t str1[] = "$GPGGA,124117.600,4712.9530,N,03855.6616,E,1,3,3.38,-8.0,M,16.4,M,,*74";
+uint8_t str1[] = "$GPGGA,063841.000,4712.9592,N,03855.6132,E,1,6,1.59,40.7,M,16.4,M,,*65";
 uint8_t str2[] = {0x01, 0x02, 0x03, 0x04};
-uint8_t str3[] = "$GPRMC,124117.600,A,4712.9530,N,03855.6616,E,0.95,35.09,010421,,,A*5E";
+uint8_t str3[] = "$GPRMC,063841.000,A,4712.9592,N,03855.6132,E,0.29,41.57,190421,,,A*5F";
+uint8_t str4[] = "$GPVTG,217.5,T,208.8,M,000.00,N,000.01,K*4C";
 uint8_t rgps_data[75] = {0};
 uint8_t rgcs_data[2] = {0};
 uint8_t to_pc_gps_data[15] = "test message! ";
-uint8_t incr_i = 0, rgps_i = 0, rgcs_i = 0;
+uint8_t incr_i = 0;
+uint8_t rgps_i = 0, rgcs_i = 0;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -143,7 +145,7 @@ int main(void)
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   HAL_UART_Receive_IT(&huart1, rgps_data, 1);
-  HAL_UART_Transmit_IT (&huart2, str1, 1);
+  HAL_UART_Transmit_IT (&huart2, str1, (sizeof(str1)/sizeof(str1[0])));
   uint8_t *p_buff = to_pc_gps_data;
   HAL_UART_Transmit_IT (&huart3, p_buff, strlen(to_pc_gps_data));
   HAL_UART_Receive_IT(&huart3, rgcs_data, 1);
@@ -402,23 +404,23 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-  if(huart->Instance == USART2)
-  {
-	  if(incr_i == 0)
-	  {
-		  HAL_UART_Transmit_IT(&huart2, str3, 10);
-		  ++incr_i;
-	  }
-	  else if(incr_i == 1)
-	  {
-		  HAL_UART_Transmit_IT(&huart2, str1, strlen(str1));
-		  incr_i = 0;
-	  }
-  }
-  else if(huart->Instance == USART3)
-  {
-
-  }
+//  if(huart->Instance == USART2)
+//  {
+//	  if(incr_i == 0)
+//	  {
+//		  HAL_UART_Transmit_IT(&huart2, str3, (sizeof(str3)/sizeof(str3[0])));
+//		  ++incr_i;
+//	  }
+//	  else if(incr_i == 1)
+//	  {
+//		  HAL_UART_Transmit_IT(&huart2, str1, (sizeof(str1)/sizeof(str1[0])));
+//		  incr_i = 0;
+//	  }
+//  }
+//  else if(huart->Instance == USART3)
+//  {
+//
+//  }
 }
 
 /* USER CODE BEGIN Header_StartTask02 */
@@ -434,8 +436,8 @@ void StartLedTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_12);
-	  osDelay(250);
+		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_12);
+		osDelay(250);
   }
   /* USER CODE END StartTask02 */
 }

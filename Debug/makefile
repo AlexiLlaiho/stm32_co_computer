@@ -81,8 +81,8 @@ all: main-build
 main-build: stm32_co_computer.elf secondary-outputs
 
 # Tool invocations
-stm32_co_computer.elf: $(OBJS) $(USER_OBJS) /home/alex/STM32CubeIDE/workspace_1.6.0/stm32_co_computer/STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-g++ -o "stm32_co_computer.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"/home/alex/STM32CubeIDE/workspace_1.6.0/stm32_co_computer/STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="stm32_co_computer.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+stm32_co_computer.elf: $(OBJS) $(USER_OBJS) D:\Git\stm32_co_computer\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-g++ -o "stm32_co_computer.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"D:\Git\stm32_co_computer\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="stm32_co_computer.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
