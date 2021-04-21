@@ -15,6 +15,8 @@ struct GPS_Packet
 	uint32_t CheckSum;
 } in_gps_pck, out_gps_pck;
 
+float lat_reslt = 0.0;
+float delta = 0.0;
 uint8_t buffer[75];
 uint8_t raw_buff[] = {0, 0, 0, 0, 0, 0, 0, 0, 0x0A};
 
@@ -40,7 +42,6 @@ void GPRMS_Analyze(uint8_t *Data_from_GPS) /* */
 
 uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
 {
-	float delta = 0.0;
 	if(*(data_frm_gcs) == '!')
 		delta = 0.0;
 	else
@@ -48,10 +49,13 @@ uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
 		delta = *(data_frm_gcs);
 		delta *= 0.001;
 	}
+	in_gps_pck.latitude -= delta;
+	lat_reslt = in_gps_pck.latitude;
+
 	sprintf (buffer, "$GPRMC,%.3f,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*",
  	   	   	  	  	  in_gps_pck.utcTime,
 					  in_gps_pck.status,
-					  in_gps_pck.latitude - delta,
+					  in_gps_pck.latitude, // latitude - delta
 					  in_gps_pck.nsIndicator,
 					  in_gps_pck.longitude,
 					  in_gps_pck.ewIndicator,
@@ -64,7 +68,7 @@ uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
 	*size = sprintf (buffer, "$GPRMC,%.3f,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*%X\n",
 					in_gps_pck.utcTime,
 					in_gps_pck.status,
-					in_gps_pck.latitude - delta,
+					in_gps_pck.latitude, // latitude - delta
 					in_gps_pck.nsIndicator,
 					in_gps_pck.longitude,
 					in_gps_pck.ewIndicator,
