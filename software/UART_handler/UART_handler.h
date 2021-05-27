@@ -21,6 +21,7 @@
 #include <math.h>
 
 void GPRMS_Analyze(uint8_t *Data_from_GPS);
+void GGA_Analyze(uint8_t *Data_from_GPS);
 uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs);
 uint8_t *raw_data_packet(uint8_t *size);
 

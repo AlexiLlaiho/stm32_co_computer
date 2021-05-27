@@ -15,6 +15,24 @@ struct GPS_Packet
 	uint32_t CheckSum;
 } in_gps_pck, out_gps_pck;
 
+struct GGA_Packet
+{
+	float utcTime;
+	float latitude;
+	char nsIndicator;
+	float longitude;
+	char ewIndicator;
+	uint8_t solutiontype;
+	uint8_t satelitenum;
+	float hdop;
+	float hightsealevel;
+	char hslindicator;
+	float geoidheight;
+	char geoindicator;
+	uint32_t CheckSum;
+} in_gga_pck;
+
+float delta = 0.0;
 uint8_t buffer[75];
 uint8_t raw_buff[] = {0, 0, 0, 0, 0, 0, 0, 0, 0x0A};
 
@@ -38,9 +56,27 @@ void GPRMS_Analyze(uint8_t *Data_from_GPS) /* */
               );
 }
 
+void GGA_Analyze(uint8_t *Data_from_GPS) /* */
+{
+      sscanf (Data_from_GPS, "$GPGGA,123519,%f,%c,%f,%c,%u,%u,%f,%f,%c,%f,%c,,*%X",
+    		  &in_gga_pck.utcTime,
+      	  	  &in_gga_pck.latitude,
+			  &in_gga_pck.nsIndicator,
+			  &in_gga_pck.longitude,
+			  &in_gga_pck.ewIndicator,
+			  &in_gga_pck.solutiontype,
+			  &in_gga_pck.satelitenum,
+			  &in_gga_pck.hdop,
+			  &in_gga_pck.hightsealevel,
+			  &in_gga_pck.hslindicator,
+			  &in_gga_pck.geoidheight,
+			  &in_gga_pck.geoindicator,
+			  &in_gga_pck.CheckSum
+              );
+}
+
 uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
 {
-	float delta = 0.0;
 	if(*(data_frm_gcs) == '!')
 		delta = 0.0;
 	else
