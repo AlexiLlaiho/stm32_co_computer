@@ -382,11 +382,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			end_byte = false;
 			++rgps_i;
 		}
-		else if ((start_byte) && (*(rgps_data + rgps_i) != 0x2A)) //*
+		else if ((start_byte) && (*(rgps_data + rgps_i) != '\n')) //*
 		{
 			++rgps_i;
 		}
-		else if ((start_byte) && (*(rgps_data + rgps_i) == '*'))
+		else if ((start_byte) && (*(rgps_data + rgps_i) == '\n'))
 		{
 			start_byte = false;
 			end_byte = true;

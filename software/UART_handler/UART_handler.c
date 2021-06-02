@@ -2,7 +2,7 @@
 
 struct GPS_Packet
 {
-	float utcTime;
+	int utcTime;
 	char status;
 	float latitude;
 	char nsIndicator;
@@ -17,7 +17,7 @@ struct GPS_Packet
 
 struct GGA_Packet
 {
-	float utcTime;
+	int utcTime;
 	float latitude;
 	char nsIndicator;
 	float longitude;
@@ -41,7 +41,7 @@ uint8_t calc_checksum(uint8_t *s);
 
 void GPRMS_Analyze(uint8_t *Data_from_GPS) /* */
 {
-      sscanf (Data_from_GPS, "$GPRMC,%f,%c,%f,%c,%f,%c,%f,%f,%d,,,%c*%X",
+      sscanf (Data_from_GPS, "$GPRMC,%u,%c,%f,%c,%f,%c,%f,%f,%d,,,%c*%X",
               &in_gps_pck.utcTime,
               &in_gps_pck.status,
               &in_gps_pck.latitude,
@@ -54,11 +54,12 @@ void GPRMS_Analyze(uint8_t *Data_from_GPS) /* */
               &in_gps_pck.mode,
               &in_gps_pck.CheckSum
               );
+      asm("nop");
 }
 
 void GGA_Analyze(uint8_t *Data_from_GPS) /* */
 {
-      sscanf (Data_from_GPS, "$GPGGA,123519,%f,%c,%f,%c,%u,%u,%f,%f,%c,%f,%c,,*%X",
+      sscanf (Data_from_GPS, "$GPGGA,%u,%f,%c,%f,%c,%u,%u,%f,%f,%c,%f,%c,,*%X",
     		  &in_gga_pck.utcTime,
       	  	  &in_gga_pck.latitude,
 			  &in_gga_pck.nsIndicator,
@@ -77,6 +78,9 @@ void GGA_Analyze(uint8_t *Data_from_GPS) /* */
 
 uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
 {
+//	struct GPS_Packet *p_in_gps = &in_gps_pck;
+//	int32_t mresult = 0;
+
 	if(*(data_frm_gcs) == '!')
 		delta = 0.0;
 	else
@@ -84,7 +88,7 @@ uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
 		delta = *(data_frm_gcs);
 		delta *= 0.001;
 	}
-	sprintf (buffer, "$GPRMC,%.3f,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*",
+	sprintf (buffer, "$GPRMC,%u,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*",
  	   	   	  	  	  in_gps_pck.utcTime,
 					  in_gps_pck.status,
 					  in_gps_pck.latitude - delta,
@@ -96,6 +100,12 @@ uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
 					  in_gps_pck.date,
 					  in_gps_pck.mode
             		);
+//	mresult = p_in_gps->date;
+//	for (uint8_t i = 0; i < 5; i++)
+//	{
+//		mresult = (*(p_in_gps + i)).utcTime;
+//		asm("nop");
+//	}
 	out_gps_pck.CheckSum = calc_checksum(buffer);
 	*size = sprintf (buffer, "$GPRMC,%.3f,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*%X\n",
 					in_gps_pck.utcTime,
