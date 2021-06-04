@@ -17,7 +17,7 @@ struct GPS_Packet
 	uint32_t CheckSum;
 } in_gps_pck;
 
-uint8_t buffer[75];
+uint8_t buffer[85];
 uint8_t raw_buff[] = {0, 0, 0, 0, 0, 0, 0, 0, 0x0A};
 
 uint8_t calc_checksum(uint8_t *s);
