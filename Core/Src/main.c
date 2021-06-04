@@ -382,11 +382,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			end_byte = false;
 			++rgps_i;
 		}
-		else if ((start_byte) && (*(rgps_data + rgps_i) != 0x2A)) //*
+		else if ((start_byte) && (*(rgps_data + rgps_i) != '\n')) //*
 		{
 			++rgps_i;
 		}
-		else if ((start_byte) && (*(rgps_data + rgps_i) == '*'))
+		else if ((start_byte) && (*(rgps_data + rgps_i) == '\n'))
 		{
 			start_byte = false;
 			end_byte = true;
@@ -457,14 +457,14 @@ void StartDefaultTask(void const *argument)
 	/* Infinite loop */
 	for (;;)
 	{
-		if(end_byte == true)
+		if((end_byte == true) && (rgps_data[3] == 'G'))
 		{
 			GPRMS_Analyze(rgps_data);
 			uint8_t lenght = 0;
 			uint8_t *p_coordinates_packet = coordinates_packet(&lenght, rgcs_data);
 			HAL_UART_Transmit_IT(&huart3, p_coordinates_packet, lenght);
 		}
-		osDelay(50);
+		osDelay(1);
 	}
 	/* USER CODE END 5 */
 }

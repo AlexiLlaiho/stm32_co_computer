@@ -3,17 +3,19 @@
 struct GPS_Packet
 {
 	float utcTime;
-	char status;
 	float latitude;
 	char nsIndicator;
 	float longitude;
 	char ewIndicator;
-	float speedOverGround;
-	float courseOverGround;
-	int32_t date;
-	char mode;
+	uint8_t solutiontype;
+	uint8_t satelitenum;
+	float hdop;
+	float hightsealevel;
+	char hslindicator;
+	float geoidheight;
+	char geoindicator;
 	uint32_t CheckSum;
-} in_gps_pck, out_gps_pck;
+} in_gps_pck;
 
 uint8_t buffer[75];
 uint8_t raw_buff[] = {0, 0, 0, 0, 0, 0, 0, 0, 0x0A};
@@ -23,18 +25,20 @@ uint8_t calc_checksum(uint8_t *s);
 
 void GPRMS_Analyze(uint8_t *Data_from_GPS) /* */
 {
-      sscanf (Data_from_GPS, "$GPRMC,%f,%c,%f,%c,%f,%c,%f,%f,%d,,,%c*%X",
+      sscanf (Data_from_GPS, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f,%c,%f,%c,,*%X",
               &in_gps_pck.utcTime,
-              &in_gps_pck.status,
               &in_gps_pck.latitude,
               &in_gps_pck.nsIndicator,
               &in_gps_pck.longitude,
               &in_gps_pck.ewIndicator,
-              &in_gps_pck.speedOverGround,
-              &in_gps_pck.courseOverGround,
-              &in_gps_pck.date,
-              &in_gps_pck.mode,
-              &in_gps_pck.CheckSum
+              &in_gps_pck.solutiontype,
+              &in_gps_pck.satelitenum,
+              &in_gps_pck.hdop,
+              &in_gps_pck.hightsealevel,
+              &in_gps_pck.hslindicator,
+              &in_gps_pck.geoidheight,
+			  &in_gps_pck.geoindicator,
+			  &in_gps_pck.CheckSum
               );
 }
 
@@ -48,32 +52,36 @@ uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
 		delta = *(data_frm_gcs);
 		delta *= 0.001;
 	}
-	sprintf (buffer, "$GPRMC,%.3f,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*",
- 	   	   	  	  	  in_gps_pck.utcTime,
-					  in_gps_pck.status,
-					  in_gps_pck.latitude - delta,
-					  in_gps_pck.nsIndicator,
-					  in_gps_pck.longitude,
-					  in_gps_pck.ewIndicator,
-					  in_gps_pck.speedOverGround,
-					  in_gps_pck.courseOverGround,
-					  in_gps_pck.date,
-					  in_gps_pck.mode
-            		);
-	out_gps_pck.CheckSum = calc_checksum(buffer);
-	*size = sprintf (buffer, "$GPRMC,%.3f,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*%X\n",
-					in_gps_pck.utcTime,
-					in_gps_pck.status,
-					in_gps_pck.latitude - delta,
-					in_gps_pck.nsIndicator,
-					in_gps_pck.longitude,
-					in_gps_pck.ewIndicator,
-					in_gps_pck.speedOverGround,
-					in_gps_pck.courseOverGround,
-					in_gps_pck.date,
-					in_gps_pck.mode,
-					out_gps_pck.CheckSum
-					);
+	sprintf(buffer, "$GPGGA,%.2f,%.4f,%c,%.4f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*",
+			in_gps_pck.utcTime,
+			in_gps_pck.latitude - delta,
+			in_gps_pck.nsIndicator,
+			in_gps_pck.longitude,
+			in_gps_pck.ewIndicator,
+			in_gps_pck.solutiontype,
+			in_gps_pck.satelitenum,
+			in_gps_pck.hdop,
+			in_gps_pck.hightsealevel,
+			in_gps_pck.hslindicator,
+			in_gps_pck.geoidheight,
+			in_gps_pck.geoindicator
+			);
+	in_gps_pck.CheckSum = calc_checksum(buffer);
+	*size = sprintf (buffer, "$GPGGA,%.2f,%.4f,%c,%.4f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*%X",
+			in_gps_pck.utcTime,
+			in_gps_pck.latitude - delta,
+			in_gps_pck.nsIndicator,
+			in_gps_pck.longitude,
+			in_gps_pck.ewIndicator,
+			in_gps_pck.solutiontype,
+			in_gps_pck.satelitenum,
+			in_gps_pck.hdop,
+			in_gps_pck.hightsealevel,
+			in_gps_pck.hslindicator,
+			in_gps_pck.geoidheight,
+			in_gps_pck.geoindicator,
+			in_gps_pck.CheckSum
+			);
 	return buffer;
 }
 
