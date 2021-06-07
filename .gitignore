@@ -1,0 +1,8 @@
+﻿*.o
+*.mk
+*.su
+Debug/makefile
+*.bin
+*.elf
+*.list
+*.map
