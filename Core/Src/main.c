@@ -464,7 +464,7 @@ void StartDefaultTask(void const *argument)
 			uint8_t *p_coordinates_packet = coordinates_packet(&lenght, rgcs_data);
 			HAL_UART_Transmit_IT(&huart3, p_coordinates_packet, lenght);
 		}
-		osDelay(50);
+		osDelay(1);
 	}
 	/* USER CODE END 5 */
 }

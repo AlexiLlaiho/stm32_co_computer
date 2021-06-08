@@ -33,6 +33,7 @@ struct GGA_Packet
 } in_gga_pck;
 
 float delta = 0.0;
+uint8_t temp = 0;
 uint8_t msg_t = 0; // if 1 - RMC's message type or 2 is equivalent GGA
 uint8_t buffer[75];
 uint8_t raw_buff[] = {0, 0, 0, 0, 0, 0, 0, 0, 0x0A};
@@ -42,6 +43,7 @@ uint8_t calc_checksum(uint8_t *s);
 
 void GPS_Analyze(uint8_t *Data_from_GPS) /* */
 {
+	temp = *(Data_from_GPS + 3);
 	if(*(Data_from_GPS + 3) == 'R')
 	{
       sscanf (Data_from_GPS, "$GPRMC,%f,%c,%f,%c,%f,%c,%f,%f,%d,,,%c*%X",
@@ -59,7 +61,7 @@ void GPS_Analyze(uint8_t *Data_from_GPS) /* */
               );
       msg_t = 1;
 	}
-	else if(*(Data_from_GPS + 3) == 'G')
+	else if((*(Data_from_GPS + 3) == 'G') && (*(Data_from_GPS + 4) == 'G'))
 	{
 		sscanf (Data_from_GPS, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f,%c,%f,%c,,*%X",
 		    	&in_gga_pck.utcTime,
@@ -89,7 +91,7 @@ uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
 		delta = *(data_frm_gcs);
 		delta *= 0.001;
 	}
-	if (msg_t = 1)
+	if (msg_t == 1)
 	{
 	sprintf (buffer, "$GPRMC,%.3f,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*",
  	   	   	  	  	  in_gps_pck.utcTime,
@@ -118,7 +120,7 @@ uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
 					in_gps_pck.CheckSum
 					);
 	}
-	else if(msg_t = 2)
+	else if(msg_t == 2)
 	{
 		sprintf(buffer, "$GPGGA,%.2f,%.4f,%c,%.4f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*",
 				in_gga_pck.utcTime,
@@ -135,7 +137,7 @@ uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
 				in_gga_pck.geoindicator
 					);
 			in_gps_pck.CheckSum = calc_checksum(buffer);
-			*size = sprintf (buffer, "$GPGGA,%.2f,%.4f,%c,%.4f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*%X",
+			*size = sprintf (buffer, "$GPGGA,%.2f,%.4f,%c,%.4f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*%X\n",
 					in_gga_pck.utcTime,
 					in_gga_pck.latitude - delta,
 					in_gga_pck.nsIndicator,
