@@ -61,15 +61,16 @@ static void MX_TIM2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
+void queuecreate(void);
 void StartDefaultTask(void const * argument);
 void StartLedTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 bool start_byte = false, end_byte = false, gsb = false, geb = false;
 uint8_t str1[] = "$GPGGA,063841.000,4712.9592,N,03855.6132,E,1,6,1.59,40.7,M,16.4,M,,*65";
-uint8_t str2[] = {0x01, 0x02, 0x03, 0x04};
-uint8_t str3[] = "$GPRMC,063841.000,A,4712.9592,N,03855.6132,E,0.29,41.57,190421,,,A*5F";
-uint8_t str4[] = "$GPVTG,217.5,T,208.8,M,000.00,N,000.01,K*4C";
+//uint8_t str2[] = {0x01, 0x02, 0x03, 0x04};
+//uint8_t str3[] = "$GPRMC,063841.000,A,4712.9592,N,03855.6132,E,0.29,41.57,190421,,,A*5F";
+//uint8_t str4[] = "$GPVTG,217.5,T,208.8,M,000.00,N,000.01,K*4C";
 uint8_t rgps_data[75] = {0};
 uint8_t rgcs_data[2] = {0};
 uint8_t to_pc_gps_data[15] = "test message! ";
@@ -79,7 +80,7 @@ uint8_t rgps_i = 0, rgcs_i = 0;
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+QueueHandle_t xRGPSQueue = NULL;
 /* USER CODE END 0 */
 
 /**
@@ -132,6 +133,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
+  queuecreate();
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -374,6 +376,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	if (huart->Instance == USART1)
 	{
 		if (*(rgps_data + rgps_i) == '$') // $
@@ -392,6 +395,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			end_byte = true;
 			rgps_i = 0;
 		}
+		xQueueSendFromISR( xRGPSQueue, (rgps_data + rgps_i), &xHigherPriorityTaskWoken);
 		HAL_UART_Receive_IT(&huart1, (rgps_data + rgps_i), 1);
 	}
 	if (huart->Instance == USART3)
@@ -429,6 +433,29 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 * @param argument: Not used
 * @retval None
 */
+void queuecreate(void)
+{
+    /* Create a queue capable of containing 10 unsigned long values. */
+	xRGPSQueue = xQueueCreate( 10, sizeof( uint8_t ) );
+
+    if( xRGPSQueue == NULL )
+    {
+    	/* Queue was not created and must not be used. */
+    	asm("nop");
+    }
+
+//    /* Create a queue capable of containing 10 pointers to AMessage
+//    structures.  These are to be queued by pointers as they are
+//    relatively large structures. */
+//    xQueue2 = xQueueCreate( 10, sizeof( struct AMessage * ) );
+//
+//    if( xQueue2 == NULL )
+//    {
+//        /* Queue was not created and must not be used. */
+//    }
+//
+    /* ... Rest of task code. */
+ }
 /* USER CODE END Header_StartTask02 */
 void StartLedTask(void const * argument)
 {
@@ -455,8 +482,16 @@ void StartDefaultTask(void const *argument)
 {
 	/* USER CODE BEGIN 5 */
 	/* Infinite loop */
+	uint8_t rdgps[10] = {0};
 	for (;;)
 	{
+		if (xRGPSQueue != NULL)
+		{
+			if( xQueueReceive( xRGPSQueue, &(rdgps), (TickType_t ) 10 ) == pdPASS )
+			{
+
+			}
+		}
 		if(end_byte == true)
 		{
 			GPS_Analyze(rgps_data);
