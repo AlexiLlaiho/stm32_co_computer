@@ -25,6 +25,8 @@
 /* USER CODE BEGIN Includes */
 #include "stdbool.h"
 #include "UART_handler.h"
+#include "app_gps.h"
+#include "app_pulse.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,25 +64,22 @@ static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 void queuecreate(void);
-void StartDefaultTask(void const * argument);
-void StartLedTask(void const * argument);
+//void StartDefaultTask(void const * argument);
+//void StartLedTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
-bool start_byte = false, end_byte = false, gsb = false, geb = false;
+extern uint8_t rdgps[3];
 uint8_t str1[] = "$GPGGA,063841.000,4712.9592,N,03855.6132,E,1,6,1.59,40.7,M,16.4,M,,*65";
-//uint8_t str2[] = {0x01, 0x02, 0x03, 0x04};
-//uint8_t str3[] = "$GPRMC,063841.000,A,4712.9592,N,03855.6132,E,0.29,41.57,190421,,,A*5F";
-//uint8_t str4[] = "$GPVTG,217.5,T,208.8,M,000.00,N,000.01,K*4C";
 uint8_t rgps_data[75] = {0};
 uint8_t rgcs_data[2] = {0};
 uint8_t to_pc_gps_data[15] = "test message! ";
 uint8_t incr_i = 0;
-uint8_t rgps_i = 0, rgcs_i = 0;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 QueueHandle_t xRGPSQueue = NULL;
+QueueHandle_t xGRDDTQueue = NULL;
 /* USER CODE END 0 */
 
 /**
@@ -146,7 +145,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  HAL_UART_Receive_IT(&huart1, rgps_data, 1);
+  HAL_UART_Receive_IT(&huart1, rdgps, 1);
   HAL_UART_Transmit_IT (&huart2, str1, (sizeof(str1)/sizeof(str1[0])));
   uint8_t *p_buff = to_pc_gps_data;
   HAL_UART_Transmit_IT (&huart3, p_buff, strlen(to_pc_gps_data));
@@ -379,30 +378,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	if (huart->Instance == USART1)
 	{
-		if (*(rgps_data + rgps_i) == '$') // $
+		if(xQueueSendFromISR(xRGPSQueue, &rdgps, &xHigherPriorityTaskWoken) == pdTRUE)
 		{
-			start_byte = true;
-			end_byte = false;
-			++rgps_i;
+			HAL_UART_Receive_IT(&huart1, rdgps, 1);
 		}
-		else if ((start_byte) && (*(rgps_data + rgps_i) != '\n')) //*
-		{
-			++rgps_i;
-		}
-		else if ((start_byte) && (*(rgps_data + rgps_i) == '\n'))
-		{
-			start_byte = false;
-			end_byte = true;
-			rgps_i = 0;
-		}
-		xQueueSendFromISR( xRGPSQueue, (rgps_data + rgps_i), &xHigherPriorityTaskWoken);
-		HAL_UART_Receive_IT(&huart1, (rgps_data + rgps_i), 1);
 	}
 	if (huart->Instance == USART3)
 	{
-		//ToDO: RingBuffer for receive a data from the GCS
-		HAL_UART_Receive_IT(&huart3, rgcs_data, 1);
-		geb = true;
+		if (xQueueSendFromISR(xGRDDTQueue, &rgcs_data, &xHigherPriorityTaskWoken) == pdTRUE)
+		{
+			HAL_UART_Receive_IT(&huart3, rgcs_data, 1);
+		}
 	}
 }
 
@@ -440,35 +426,24 @@ void queuecreate(void)
 
     if( xRGPSQueue == NULL )
     {
-    	/* Queue was not created and must not be used. */
     	asm("nop");
     }
 
 //    /* Create a queue capable of containing 10 pointers to AMessage
 //    structures.  These are to be queued by pointers as they are
 //    relatively large structures. */
-//    xQueue2 = xQueueCreate( 10, sizeof( struct AMessage * ) );
-//
-//    if( xQueue2 == NULL )
-//    {
-//        /* Queue was not created and must not be used. */
-//    }
-//
+    xGRDDTQueue = xQueueCreate( 10, sizeof( uint8_t ) );
+
+    if( xGRDDTQueue == NULL )
+    {
+    	asm("nop");
+    }
+
     /* ... Rest of task code. */
  }
 /* USER CODE END Header_StartTask02 */
-void StartLedTask(void const * argument)
-{
-  /* USER CODE BEGIN StartTask02 */
-  /* Infinite loop */
-  for(;;)
-  {
-		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_12);
-		osDelay(250);
-  }
-  /* USER CODE END StartTask02 */
-}
 
+/* USER CODE END StartTask02 */
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -478,32 +453,8 @@ void StartLedTask(void const * argument)
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void const *argument)
-{
-	/* USER CODE BEGIN 5 */
-	/* Infinite loop */
-	uint8_t rdgps[10] = {0};
-	for (;;)
-	{
-		if (xRGPSQueue != NULL)
-		{
-			if( xQueueReceive( xRGPSQueue, &(rdgps), (TickType_t ) 10 ) == pdPASS )
-			{
 
-			}
-		}
-		if(end_byte == true)
-		{
-			GPS_Analyze(rgps_data);
-			uint8_t lenght = 0;
-			uint8_t *p_coordinates_packet = coordinates_packet(&lenght, rgcs_data);
-			HAL_UART_Transmit_IT(&huart3, p_coordinates_packet, lenght);
-		}
-		osDelay(1);
-	}
-	/* USER CODE END 5 */
-}
-
+/* USER CODE END 5 */
 /**
   * @brief  This function is executed in case of error occurrence.
   * @retval None

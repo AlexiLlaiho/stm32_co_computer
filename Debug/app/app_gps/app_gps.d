@@ -1,5 +1,5 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
- ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h \
+app/app_gps/app_gps.o: ../app/app_gps/app_gps.c ../app/app_gps/app_gps.h \
+ ../Core/Inc/main.h ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h \
  ../Core/Inc/stm32f1xx_hal_conf.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h \
@@ -41,8 +41,9 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h \
- ../software/UART_handler/UART_handler.h ../app/app_gps/app_gps.h \
- ../app/app_pulse/app_pulse.h
+ ../software/UART_handler/UART_handler.h
+
+../app/app_gps/app_gps.h:
 
 ../Core/Inc/main.h:
 
@@ -131,7 +132,3 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h:
 
 ../software/UART_handler/UART_handler.h:
-
-../app/app_gps/app_gps.h:
-
-../app/app_pulse/app_pulse.h:

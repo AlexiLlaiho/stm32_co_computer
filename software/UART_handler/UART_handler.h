@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include <math.h>
 
 void GPS_Analyze(uint8_t *Data_from_GPS);

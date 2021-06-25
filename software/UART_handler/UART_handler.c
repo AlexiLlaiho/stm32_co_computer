@@ -1,5 +1,10 @@
 #include "UART_handler.h"
 
+/*Private variables*/
+bool start_byte = false, end_byte = false, gsb = false, geb = false;
+uint8_t rgps_i = 0, rgcs_i = 0;
+/*******************/
+
 struct GPS_Packet
 {
 	float utcTime;
@@ -181,6 +186,27 @@ uint8_t* raw_data_packet(uint8_t *size)
 	*size = sizeof(raw_buff) / sizeof(raw_buff[0]);
 
 	return raw_buff;
+}
+
+bool start_stop(uint8_t *data_for_analyze)
+{
+	if (*(data_for_analyze + rgps_i) == '$') // $
+	{
+		start_byte = true;
+		end_byte = false;
+		++rgps_i;
+	}
+	else if ((start_byte) && (*(data_for_analyze + rgps_i) != '\n')) //*
+	{
+		++rgps_i;
+	}
+	else if ((start_byte) && (*(data_for_analyze + rgps_i) == '\n'))
+	{
+		start_byte = false;
+		end_byte = true;
+		rgps_i = 0;
+	}
+	return true;
 }
 
 uint8_t calc_checksum(uint8_t *s)
