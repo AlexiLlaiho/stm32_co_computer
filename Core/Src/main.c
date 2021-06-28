@@ -70,7 +70,7 @@ void queuecreate(void);
 /* USER CODE BEGIN PFP */
 extern uint8_t rdgps[3];
 uint8_t str1[] = "$GPGGA,063841.000,4712.9592,N,03855.6132,E,1,6,1.59,40.7,M,16.4,M,,*65";
-uint8_t rgps_data[75] = {0};
+//uint8_t rgps_data[75] = {0};
 uint8_t rgcs_data[2] = {0};
 uint8_t to_pc_gps_data[15] = "test message! ";
 uint8_t incr_i = 0;
