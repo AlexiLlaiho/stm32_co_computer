@@ -21,7 +21,7 @@
 #include "UART_handler.h"
 
 /****** Public variables *******************************************************/
-uint8_t rdgps[3];
+uint8_t rdgps[10];
 /*******************************************************************************/
 
 void StartDefaultTask(void const *argument);

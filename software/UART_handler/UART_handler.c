@@ -185,7 +185,7 @@ uint8_t* raw_data_packet(uint8_t *size)
 	return raw_buff;
 }
 
-bool start_stop(uint8_t *data_for_analyze)
+uint8_t *start_stop(uint8_t *data_for_analyze)
 {
 	if (*(data_for_analyze) == '$') // $
 	{
@@ -206,7 +206,7 @@ bool start_stop(uint8_t *data_for_analyze)
 		end_byte = true;
 		buffer[rgps_i] = *data_for_analyze;
 		rgps_i = 0;
-		return true;
+		return &buffer;
 	}
 }
 

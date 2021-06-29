@@ -22,7 +22,7 @@
 #include <math.h>
 
 /****** Public functions *******************************************************/
-bool start_stop(uint8_t *data_for_analyze);
+uint8_t *start_stop(uint8_t *data_for_analyze);
 void GPS_Analyze(uint8_t *Data_from_GPS);
 uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs);
 uint8_t *raw_data_packet(uint8_t *size);
