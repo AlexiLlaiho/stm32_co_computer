@@ -3,10 +3,11 @@
 /**************** Private variables **********************************/
 bool start_byte = false, end_byte = false;
 float delta = 0.0;
-uint8_t temp = 0, rgps_i;
+uint8_t temp = 0, rgps_i, buff_numb = 0;
 uint8_t msg_t = 0; // if 1 - RMC's message type or 2 is equivalent GGA
-uint8_t buffer[85];
+uint8_t buffer[85], buffer1[85], buffer2[85];
 uint8_t raw_buff[] = {0, 0, 0, 0, 0, 0, 0, 0, 0x0A};
+uint8_t *p_current_buff;
 
 struct GPS_Packet
 {
@@ -41,30 +42,33 @@ struct GGA_Packet
 } in_gga_pck;
 /*********************************************************************/
 
+/**************** Private functions **********************************/
 uint8_t calc_checksum(uint8_t *s);
+uint8_t* switch_buff(uint8_t buff_nmb, uint8_t item_buff, uint8_t *data_to_buff, bool now_change);
+/*********************************************************************/
 
 void GPS_Analyze(uint8_t *Data_from_GPS) /* */
 {
-//	temp = *(Data_from_GPS + 3);
-//	if(*(Data_from_GPS + 3) == 'R')
-//	{
-//      sscanf (Data_from_GPS, "$GPRMC,%f,%c,%f,%c,%f,%c,%f,%f,%d,,,%c*%X",
-//              &in_gps_pck.utcTime,
-//              &in_gps_pck.status,
-//              &in_gps_pck.latitude,
-//              &in_gps_pck.nsIndicator,
-//              &in_gps_pck.longitude,
-//              &in_gps_pck.ewIndicator,
-//              &in_gps_pck.speedOverGround,
-//              &in_gps_pck.courseOverGround,
-//              &in_gps_pck.date,
-//              &in_gps_pck.mode,
-//              &in_gps_pck.CheckSum
-//              );
-//      msg_t = 1;
-//	}
-//	else if((*(Data_from_GPS + 3) == 'G') && (*(Data_from_GPS + 4) == 'G'))
-//	{
+	temp = *(Data_from_GPS + 3);
+	if(*(Data_from_GPS + 3) == 'R')
+	{
+      sscanf (Data_from_GPS, "$GPRMC,%f,%c,%f,%c,%f,%c,%f,%f,%d,,,%c*%X",
+              &in_gps_pck.utcTime,
+              &in_gps_pck.status,
+              &in_gps_pck.latitude,
+              &in_gps_pck.nsIndicator,
+              &in_gps_pck.longitude,
+              &in_gps_pck.ewIndicator,
+              &in_gps_pck.speedOverGround,
+              &in_gps_pck.courseOverGround,
+              &in_gps_pck.date,
+              &in_gps_pck.mode,
+              &in_gps_pck.CheckSum
+              );
+      msg_t = 1;
+	}
+	else if((*(Data_from_GPS + 3) == 'G') && (*(Data_from_GPS + 4) == 'G'))
+	{
 		sscanf (Data_from_GPS, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f,%c,%f,%c,,*%X",
 		    	&in_gga_pck.utcTime,
 		      	&in_gga_pck.latitude,
@@ -81,7 +85,7 @@ void GPS_Analyze(uint8_t *Data_from_GPS) /* */
 				&in_gga_pck.CheckSum
 		        );
 		msg_t = 2;
-//	}
+	}
 }
 
 uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
@@ -154,7 +158,6 @@ uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
 					in_gga_pck.geoindicator,
 					in_gga_pck.CheckSum
 					);
-
 	}
 	return buffer;
 }
@@ -187,26 +190,58 @@ uint8_t* raw_data_packet(uint8_t *size)
 
 uint8_t *start_stop(uint8_t *data_for_analyze)
 {
-	if (*(data_for_analyze) == '$') // $
+	if (*(data_for_analyze) == '$')
 	{
 		rgps_i = 0;
 		start_byte = true;
 		end_byte = false;
-		buffer[rgps_i] = *data_for_analyze;
+		switch_buff(buff_numb, rgps_i, data_for_analyze, end_byte);
 		++rgps_i;
 	}
 	else if ((start_byte) && (*(data_for_analyze) != '\n'))
 	{
-		buffer[rgps_i] = *data_for_analyze;
+		switch_buff(buff_numb, rgps_i, data_for_analyze, end_byte);
 		++rgps_i;
 	}
 	else if ((start_byte) && (*(data_for_analyze ) == '\n'))
 	{
 		start_byte = false;
 		end_byte = true;
-		buffer[rgps_i] = *data_for_analyze;
+		p_current_buff = switch_buff(buff_numb, rgps_i, data_for_analyze, end_byte);
 		rgps_i = 0;
-		return &buffer;
+		buff_numb++;
+	}
+	if(buff_numb > 2)
+		buff_numb = 0;
+
+	return p_current_buff;
+}
+
+uint8_t *switch_buff(uint8_t buff_nmb, uint8_t item_buff, uint8_t *data_to_buff, bool now_change)
+{
+	if (buff_nmb == 0)
+	{
+		buffer[item_buff] = *data_to_buff;
+		if (now_change == true)
+		{
+			return buffer;
+		}
+	}
+	else if (buff_nmb == 1)
+	{
+		buffer1[item_buff] = *data_to_buff;
+		if (now_change == true)
+		{
+			return buffer1;
+		}
+	}
+	else if (buff_nmb == 2)
+	{
+		buffer2[item_buff] = *data_to_buff;
+		if (now_change == true)
+		{
+			return buffer2;
+		}
 	}
 }
 

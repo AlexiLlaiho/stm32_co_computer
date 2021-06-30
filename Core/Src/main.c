@@ -383,7 +383,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	{
 		p_uart_gps = start_stop(&uart_gps);
 		{
-			if (xQueueSendFromISR(xRGPSQueue, &p_uart_gps, &xHigherPriorityTaskWoken) != pdTRUE)
+			if (xQueueSendFromISR(xRGPSQueue, &p_uart_gps, &xHigherPriorityTaskWoken) == errQUEUE_FULL)
 			{
 				asm("nop");
 			}
@@ -428,16 +428,10 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 */
 void queuecreate(void)
 {
-	xRGPSQueue = xQueueCreate( 10, sizeof( uint8_t ) );
-
-    if( xRGPSQueue == NULL )
-    {
-    	asm("nop");
-    }
-
+	xRGPSQueue = xQueueCreate( 10, sizeof( uint8_t *) );
     xGRDDTQueue = xQueueCreate( 10, sizeof( uint8_t ) );
 
-    if( xGRDDTQueue == NULL )
+    if(( xGRDDTQueue == NULL ) || ( xRGPSQueue == NULL ))
     {
     	asm("nop");
     }
