@@ -382,12 +382,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	if (huart->Instance == USART1)
 	{
 		p_uart_gps = start_stop(&uart_gps);
+		if(p_uart_gps != 0)
 		{
 			if (xQueueSendFromISR(xRGPSQueue, &p_uart_gps, &xHigherPriorityTaskWoken) == errQUEUE_FULL)
 			{
 				asm("nop");
 			}
 		}
+		else
+			asm("nop");
+
 		HAL_UART_Receive_IT(&huart1, &uart_gps, 1);
 	}
 	if (huart->Instance == USART3)
@@ -428,7 +432,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 */
 void queuecreate(void)
 {
-	xRGPSQueue = xQueueCreate( 10, sizeof( uint8_t *) );
+	xRGPSQueue = xQueueCreate( 30, sizeof( uint8_t *) );
     xGRDDTQueue = xQueueCreate( 10, sizeof( uint8_t ) );
 
     if(( xGRDDTQueue == NULL ) || ( xRGPSQueue == NULL ))

@@ -17,7 +17,7 @@ extern QueueHandle_t xRGPSQueue;
 extern uint8_t buffer[];
 extern uint8_t rgcs_data[];
 extern UART_HandleTypeDef huart3;
-uint8_t *qgps[3];
+uint8_t *qgps;
 
 void StartDefaultTask(void const *argument)
 {
@@ -25,10 +25,10 @@ void StartDefaultTask(void const *argument)
 	{
 		if (xRGPSQueue != NULL)
 		{
-			if( xQueueReceive( xRGPSQueue, &qgps, (TickType_t ) 10 ) == pdPASS )
+			if( xQueueReceive( xRGPSQueue, &(qgps), (TickType_t ) 2 ) == pdPASS )
 			{
-//					GPS_Analyze(qgps[0]);
-//					uint8_t lenght = 0;
+					GPS_Analyze(qgps);
+					uint8_t lenght = 0;
 //					uint8_t *p_coordinates_packet = coordinates_packet(&lenght, rgcs_data);
 //					HAL_UART_Transmit_IT(&huart3, p_coordinates_packet, lenght);
 
