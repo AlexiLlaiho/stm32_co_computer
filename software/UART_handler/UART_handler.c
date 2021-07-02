@@ -2,12 +2,15 @@
 
 /**************** Private variables **********************************/
 bool start_byte = false, end_byte = false;
+bool st_rdlt_byte = false, en_rdlt_byte = false;
 float delta = 0.0;
 uint8_t temp = 0, rgps_i, buff_numb = 0;
 uint8_t msg_t = 0; // if 1 - RMC's message type or 2 is equivalent GGA
-uint8_t buffer[85], buffer1[85], buffer2[85];
+uint8_t buffer[85], buffer1[85], buffer2[85], dlt_gnd_buff[4];
 uint8_t raw_buff[] = {0, 0, 0, 0, 0, 0, 0, 0, 0x0A};
 uint8_t *p_current_buff;
+int16_t dlt_mns_gnd = 0;
+uint8_t rdlt_i = 0;
 
 struct GPS_Packet
 {
@@ -217,6 +220,31 @@ uint8_t *start_stop(uint8_t *data_for_analyze)
 	return p_current_buff;
 }
 
+/*
+ *
+ */
+uint8_t *start_stop_lite(uint8_t *data_for_analyze)
+{
+	if (*(data_for_analyze) == '>')
+	{
+		rdlt_i = 0;
+		st_rdlt_byte = true;
+		en_rdlt_byte = false;
+	}
+	else if ((st_rdlt_byte) && (*(data_for_analyze) != '\n'))
+	{
+		dlt_gnd_buff[rdlt_i] = *(data_for_analyze);
+		++rdlt_i;
+	}
+	else if ((st_rdlt_byte) && (*(data_for_analyze ) == '\n'))
+	{
+		st_rdlt_byte = false;
+		en_rdlt_byte = true;
+		rdlt_i = 0;
+	}
+	return dlt_gnd_buff;
+}
+
 uint8_t *switch_buff(uint8_t buff_nmb, uint8_t item_buff, uint8_t *data_to_buff, bool now_change)
 {
 	if (buff_nmb == 0)
@@ -243,6 +271,32 @@ uint8_t *switch_buff(uint8_t buff_nmb, uint8_t item_buff, uint8_t *data_to_buff,
 			return buffer2;
 		}
 	}
+}
+
+/*
+ * example of input buffer: exb[] = {"-", "9","9","9"}
+ * uint8_t *dltgnd - this is a pointer to the buffer
+ * return int16_t * - this is a pointer to the result of incoming data
+*/
+int16_t *delta_minus_gps(uint8_t *dltgnd)
+{
+	int8_t a = 0, b = 0, c = 0;
+
+	if(*(dltgnd) == '-')
+	{
+		a = (*(dltgnd) - 48) * 100;
+		b = (*(dltgnd + 1) - 48) * 10;
+		c = *(dltgnd + 2) - 48;
+		dlt_mns_gnd = (a + b + c) * (-1);
+	}
+	else
+	{
+		a = (*(dltgnd) - 48) * 100;
+		b = (*(dltgnd + 1) - 48) * 10;
+		c = *(dltgnd + 2) - 48;
+		dlt_mns_gnd = (a + b + c);
+	}
+	return &dlt_mns_gnd;
 }
 
 uint8_t calc_checksum(uint8_t *s)

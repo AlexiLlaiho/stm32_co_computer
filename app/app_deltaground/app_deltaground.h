@@ -1,9 +1,9 @@
 /*!
  *******************************************************************************
  * @file    .h
- * @author
- * @version V1.0.0.0
- * @date    20.01.2018
+ * @author  Gorbunov
+ * @version V0.0.1
+ * @date    1.07.2021
  * @brief
  * @details
  *******************************************************************************
@@ -13,21 +13,18 @@
  *******************************************************************************
  */
 
-#ifndef __UART_HANDLER_H
-#define __UART_HANDLER_H
+#ifndef __APP_DELTAGROUND_H
+#define __APP_DELTAGROUND_H
 
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
-#include <math.h>
+#include "main.h"
+#include "cmsis_os.h"
 
-/****** Public functions *******************************************************/
-uint8_t *start_stop(uint8_t *data_for_analyze);
-uint8_t *start_stop_lite(uint8_t *data_for_analyze);
-void GPS_Analyze(uint8_t *Data_from_GPS);
-uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs);
-uint8_t *raw_data_packet(uint8_t *size);
-int16_t *delta_minus_gps(uint8_t *dltgnd);
+/****** Public variables *******************************************************/
+
 /*******************************************************************************/
 
-#endif
+/****** Public functions *******************************************************/
+void StartDeltaGroundTask(void const *argument);
+/*******************************************************************************/
+
+#endif //__DELTAGROUND

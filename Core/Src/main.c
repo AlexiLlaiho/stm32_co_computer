@@ -23,10 +23,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+//#include "stm32f1xx_hal_cortex.h"
 #include "stdbool.h"
 #include "UART_handler.h"
 #include "app_gps.h"
 #include "app_pulse.h"
+#include "app_deltaground.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,6 +54,7 @@ UART_HandleTypeDef huart3;
 
 osThreadId defaultTaskHandle;
 osThreadId ledTaskHandle;
+osThreadId groundTaskHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -64,15 +67,12 @@ static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 void queuecreate(void);
-//void StartDefaultTask(void const * argument);
-//void StartLedTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
-uint8_t uart_gps = 0;
 extern uint8_t rdgps[];
 uint8_t str1[] = "$GPGGA,063841.000,4712.9592,N,03855.6132,E,1,6,1.59,40.7,M,16.4,M,,*65";
-//uint8_t rgps_data[75] = {0};
-uint8_t rgcs_data[2] = {0};
+uint8_t uart_gps = 0;
+uint8_t rgcs_data = 0;
 uint8_t to_pc_gps_data[15] = "test message! ";
 uint8_t incr_i = 0;
 /* USER CODE END PFP */
@@ -116,7 +116,9 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-
+//  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_1);
+//  HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+//  HAL_NVIC_SetPriority(USART3_IRQn, 0, 7);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -141,16 +143,19 @@ int main(void)
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 512);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
-  osThreadDef(ledTask, StartLedTask, osPriorityNormal, 0, 128);
+  osThreadDef(ledTask, StartLedTask, osPriorityLow, 0, 128);
   ledTaskHandle = osThreadCreate(osThread(ledTask), NULL);
+
+  osThreadDef(groundTask, StartDeltaGroundTask, osPriorityNormal, 0, 128);
+  groundTaskHandle = osThreadCreate(osThread(groundTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   HAL_UART_Receive_IT(&huart1, &uart_gps, 1);
-  HAL_UART_Transmit_IT (&huart2, str1, (sizeof(str1)/sizeof(str1[0])));
-  uint8_t *p_buff = to_pc_gps_data;
-  HAL_UART_Transmit_IT (&huart3, p_buff, strlen(to_pc_gps_data));
-  HAL_UART_Receive_IT(&huart3, rgcs_data, 1);
+//  HAL_UART_Transmit_IT (&huart2, str1, (sizeof(str1)/sizeof(str1[0])));
+//  uint8_t *p_buff = to_pc_gps_data;
+//  HAL_UART_Transmit_IT (&huart3, p_buff, strlen(to_pc_gps_data));
+  HAL_UART_Receive_IT(&huart3, &rgcs_data, 1);
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -378,6 +383,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	uint8_t *p_uart_gps;
+	uint8_t *p_uart_gnd;
 
 	if (huart->Instance == USART1)
 	{
@@ -394,31 +400,24 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 		HAL_UART_Receive_IT(&huart1, &uart_gps, 1);
 	}
+
 	if (huart->Instance == USART3)
 	{
-		if (xQueueSendFromISR(xGRDDTQueue, &rgcs_data, &xHigherPriorityTaskWoken) == pdTRUE)
-		{
-			HAL_UART_Receive_IT(&huart3, rgcs_data, 1);
-		}
+		p_uart_gnd = start_stop_lite(&rgcs_data);
+		//		if (p_uart_gnd != 0)
+		//		{
+		//			if (xQueueSendFromISR(xGRDDTQueue, &p_uart_gnd, &xHigherPriorityTaskWoken) == pdTRUE)
+		//			{
+		//				asm("nop");
+		//			}
+		//		}
+		HAL_UART_Receive_IT(&huart3, &rgcs_data, 1);
 	}
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-//  if(huart->Instance == USART2)
-//  {
-//	  if(incr_i == 0)
-//	  {
-//		  HAL_UART_Transmit_IT(&huart2, str3, (sizeof(str3)/sizeof(str3[0])));
-//		  ++incr_i;
-//	  }
-//	  else if(incr_i == 1)
-//	  {
-//		  HAL_UART_Transmit_IT(&huart2, str1, (sizeof(str1)/sizeof(str1[0])));
-//		  incr_i = 0;
-//	  }
-//  }
-//  else if(huart->Instance == USART3)
+//	if(huart->Instance == USART3)
 //  {
 //
 //  }
@@ -440,6 +439,7 @@ void queuecreate(void)
     	asm("nop");
     }
  }
+
 /* USER CODE END Header_StartTask02 */
 
 /* USER CODE END StartTask02 */
