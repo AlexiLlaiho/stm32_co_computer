@@ -99,7 +99,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  HAL_NVIC_SetPriority(USART1_IRQn, 15, 1);
+  HAL_NVIC_SetPriority(USART3_IRQn, 15, 0);
   /* USER CODE END Init */
 
   /* Configure the system clock */
