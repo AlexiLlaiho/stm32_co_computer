@@ -16,6 +16,7 @@
 
 extern QueueHandle_t xGRDDTQueue;
 uint8_t *qgnd;
+extern int16_t *pgndres;
 
 void StartDeltaGroundTask(void const *argument)
 {
@@ -25,7 +26,7 @@ void StartDeltaGroundTask(void const *argument)
 		{
 			if (xQueueReceive(xGRDDTQueue, &(qgnd), (TickType_t) 2) == pdPASS)
 			{
-
+				pgndres = delta_minus_gps(qgnd);
 			}
 		}
 	}

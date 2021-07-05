@@ -91,15 +91,10 @@ void GPS_Analyze(uint8_t *Data_from_GPS) /* */
 	}
 }
 
-uint8_t *coordinates_packet(uint8_t *size, uint8_t *data_frm_gcs)
+uint8_t *coordinates_packet(uint8_t *size, int16_t *data_frm_gcs)
 {
-	if(*(data_frm_gcs) == '!')
-		delta = 0.0;
-	else
-	{
-		delta = *(data_frm_gcs);
-		delta *= 0.001;
-	}
+	delta = (*(data_frm_gcs)) * 0.001;
+
 	if (msg_t == 1)
 	{
 	sprintf (buffer, "$GPRMC,%.3f,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*",
@@ -223,20 +218,20 @@ uint8_t *start_stop(uint8_t *data_for_analyze)
 /*
  *
  */
-uint8_t *start_stop_lite(uint8_t *data_for_analyze)
+uint8_t *start_stop_lite(uint8_t *dt_fr_analyze)
 {
-	if (*(data_for_analyze) == '>')
+	if (*(dt_fr_analyze) == '>')
 	{
 		rdlt_i = 0;
 		st_rdlt_byte = true;
 		en_rdlt_byte = false;
 	}
-	else if ((st_rdlt_byte) && (*(data_for_analyze) != '\n'))
+	else if ((st_rdlt_byte) && (*(dt_fr_analyze) != '\n'))
 	{
-		dlt_gnd_buff[rdlt_i] = *(data_for_analyze);
+		dlt_gnd_buff[rdlt_i] = *(dt_fr_analyze);
 		++rdlt_i;
 	}
-	else if ((st_rdlt_byte) && (*(data_for_analyze ) == '\n'))
+	else if ((st_rdlt_byte) && (*(dt_fr_analyze ) == '\n'))
 	{
 		st_rdlt_byte = false;
 		en_rdlt_byte = true;
@@ -280,21 +275,22 @@ uint8_t *switch_buff(uint8_t buff_nmb, uint8_t item_buff, uint8_t *data_to_buff,
 */
 int16_t *delta_minus_gps(uint8_t *dltgnd)
 {
-	int8_t a = 0, b = 0, c = 0;
+	int8_t a = 0, b = 0, c = 0, d = 0;
 
 	if(*(dltgnd) == '-')
 	{
-		a = (*(dltgnd) - 48) * 100;
-		b = (*(dltgnd + 1) - 48) * 10;
-		c = *(dltgnd + 2) - 48;
+		a = (*(dltgnd + 1) - 48) * 100;
+		b = (*(dltgnd + 2) - 48) * 10;
+		c = *(dltgnd + 3) - 48;
 		dlt_mns_gnd = (a + b + c) * (-1);
 	}
 	else
 	{
-		a = (*(dltgnd) - 48) * 100;
-		b = (*(dltgnd + 1) - 48) * 10;
-		c = *(dltgnd + 2) - 48;
-		dlt_mns_gnd = (a + b + c);
+		a = (*(dltgnd) - 48) * 1000;
+		b = (*(dltgnd + 1) - 48) * 100;
+		c = (*(dltgnd + 2) - 48) * 10;
+		d = *(dltgnd + 3) - 48;
+		dlt_mns_gnd = (a + b + c + d);
 	}
 	return &dlt_mns_gnd;
 }

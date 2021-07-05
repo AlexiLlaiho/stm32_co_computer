@@ -18,6 +18,7 @@
 
 #include "main.h"
 #include "cmsis_os.h"
+#include "UART_handler.h"
 
 /****** Public variables *******************************************************/
 

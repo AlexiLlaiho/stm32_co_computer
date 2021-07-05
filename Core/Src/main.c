@@ -117,9 +117,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-//  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_1);
-//  HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
-//  HAL_NVIC_SetPriority(USART3_IRQn, 0, 7);
+
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -144,10 +142,10 @@ int main(void)
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 512);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
-  osThreadDef(ledTask, StartLedTask, osPriorityLow, 0, 128);
-  ledTaskHandle = osThreadCreate(osThread(ledTask), NULL);
+//  osThreadDef(ledTask, StartLedTask, osPriorityLow, 0, 128);
+//  ledTaskHandle = osThreadCreate(osThread(ledTask), NULL);
 
-  osThreadDef(groundTask, StartDeltaGroundTask, osPriorityNormal, 0, 128);
+  osThreadDef(groundTask, StartDeltaGroundTask, osPriorityNormal, 0, 256);
   groundTaskHandle = osThreadCreate(osThread(groundTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -405,13 +403,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	if (huart->Instance == USART3)
 	{
 		p_uart_gnd = start_stop_lite(&rgcs_data);
-		//		if (p_uart_gnd != 0)
-		//		{
-		//			if (xQueueSendFromISR(xGRDDTQueue, &p_uart_gnd, &xHigherPriorityTaskWoken) == pdTRUE)
-		//			{
-		//				asm("nop");
-		//			}
-		//		}
+		if (p_uart_gnd != 0)
+		{
+			if (xQueueSendFromISR(xGRDDTQueue, &p_uart_gnd, &xHigherPriorityTaskWoken) == pdTRUE)
+			{
+				asm("nop");
+			}
+		}
 		HAL_UART_Receive_IT(&huart3, &rgcs_data, 1);
 	}
 }
@@ -433,7 +431,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 void queuecreate(void)
 {
 	xRGPSQueue = xQueueCreate( 30, sizeof( uint8_t *) );
-    xGRDDTQueue = xQueueCreate( 10, sizeof( uint8_t ) );
+    xGRDDTQueue = xQueueCreate( 10, sizeof( uint8_t *) );
 
     if(( xGRDDTQueue == NULL ) || ( xRGPSQueue == NULL ))
     {

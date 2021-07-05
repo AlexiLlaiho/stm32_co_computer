@@ -15,8 +15,8 @@
 #include "app_gps.h"
 extern QueueHandle_t xRGPSQueue;
 extern uint8_t buffer[];
-extern uint8_t rgcs_data[];
 extern UART_HandleTypeDef huart3;
+int16_t *pgndres;
 uint8_t *qgps;
 
 void StartDefaultTask(void const *argument)
@@ -29,11 +29,9 @@ void StartDefaultTask(void const *argument)
 			{
 					GPS_Analyze(qgps);
 					uint8_t lenght = 0;
-//					uint8_t *p_coordinates_packet = coordinates_packet(&lenght, rgcs_data);
-//					HAL_UART_Transmit_IT(&huart3, p_coordinates_packet, lenght);
-
+					uint8_t *p_coordinates_packet = coordinates_packet(&lenght, pgndres);
+					HAL_UART_Transmit_IT(&huart3, p_coordinates_packet, lenght);
 			}
 		}
-//		osDelay(10);
 	}
 }
