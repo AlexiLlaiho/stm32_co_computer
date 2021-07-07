@@ -16,7 +16,7 @@
 extern QueueHandle_t xRGPSQueue;
 extern uint8_t buffer[];
 extern UART_HandleTypeDef huart3;
-int16_t *pgndres;
+int16_t pgndres;
 uint8_t *qgps;
 
 void StartDefaultTask(void const *argument)

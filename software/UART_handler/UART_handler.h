@@ -25,9 +25,9 @@
 uint8_t *start_stop(uint8_t *data_for_analyze);
 uint8_t *start_stop_lite(uint8_t *dt_fr_analyze);
 void GPS_Analyze(uint8_t *Data_from_GPS);
-uint8_t *coordinates_packet(uint8_t *size, int16_t *data_frm_gcs);
+uint8_t *coordinates_packet(uint8_t *size, int16_t data_frm_gcs);
 uint8_t *raw_data_packet(uint8_t *size);
-int16_t *delta_minus_gps(uint8_t *dltgnd);
+int16_t delta_minus_gps(uint8_t *dltgnd);
 /*******************************************************************************/
 
 #endif

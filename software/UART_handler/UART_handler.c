@@ -91,9 +91,9 @@ void GPS_Analyze(uint8_t *Data_from_GPS) /* */
 	}
 }
 
-uint8_t *coordinates_packet(uint8_t *size, int16_t *data_frm_gcs)
+uint8_t *coordinates_packet(uint8_t *size, int16_t data_frm_gcs)
 {
-	delta = (*(data_frm_gcs)) * 0.001;
+	delta = data_frm_gcs * 0.001;
 
 	if (msg_t == 1)
 	{
@@ -271,9 +271,9 @@ uint8_t *switch_buff(uint8_t buff_nmb, uint8_t item_buff, uint8_t *data_to_buff,
 /*
  * example of input buffer: exb[] = {"-", "9","9","9"}
  * uint8_t *dltgnd - this is a pointer to the buffer
- * return int16_t * - this is a pointer to the result of incoming data
+ * return int16_t  - this is a result of calculation incoming data
 */
-int16_t *delta_minus_gps(uint8_t *dltgnd)
+int16_t delta_minus_gps(uint8_t *dltgnd)
 {
 	int8_t a = 0, b = 0, c = 0, d = 0;
 
@@ -292,7 +292,7 @@ int16_t *delta_minus_gps(uint8_t *dltgnd)
 		d = *(dltgnd + 3) - 48;
 		dlt_mns_gnd = (a + b + c + d);
 	}
-	return &dlt_mns_gnd;
+	return dlt_mns_gnd;
 }
 
 uint8_t calc_checksum(uint8_t *s)
