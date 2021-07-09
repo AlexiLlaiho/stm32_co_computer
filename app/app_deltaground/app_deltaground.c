@@ -14,6 +14,7 @@
  */
 #include "app_deltaground.h"
 
+bool tr_enable = false;
 extern QueueHandle_t xGRDDTQueue;
 extern UART_HandleTypeDef huart3;
 uint8_t *qgnd;
@@ -34,8 +35,10 @@ void StartDeltaGroundTask(void const *argument)
 				else
 					delta_packet[6] = '+';
 				delta_packet[7] = (uint8_t)pgndres;
-				HAL_UART_Transmit_IT(&huart3, delta_packet, 8);
+//				tr_enable = true;
 			}
 		}
+		if(tr_enable == true)
+			HAL_UART_Transmit_IT(&huart3, delta_packet, 8);
 	}
 }
