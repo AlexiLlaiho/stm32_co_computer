@@ -18,7 +18,7 @@ bool tr_enable = false;
 extern QueueHandle_t xGRDDTQueue;
 extern UART_HandleTypeDef huart3;
 uint8_t *qgnd;
-uint8_t delta_packet[] = {'D', 'e', 'l', 't', 'a', '=', 0, 0};
+uint8_t delta_packet[] = {'D', 'e', 'l', 't', 'a', '=', '0', '0','0','0'};
 extern int16_t pgndres;
 
 void StartDeltaGroundTask(void const *argument)
@@ -30,15 +30,11 @@ void StartDeltaGroundTask(void const *argument)
 			if (xQueueReceive(xGRDDTQueue, &(qgnd), (TickType_t) 2) == pdPASS)
 			{
 				pgndres = delta_minus_gps(qgnd);
-				if(pgndres < 0)
-					delta_packet[6] = '-';
-				else
-					delta_packet[6] = '+';
-				delta_packet[7] = (uint8_t)pgndres;
-//				tr_enable = true;
+				for(uint8_t local_i = 0; local_i < 4; local_i++)
+				{
+					delta_packet[local_i + 6] = *(qgnd + local_i);
+				}
 			}
 		}
-		if(tr_enable == true)
-			HAL_UART_Transmit_IT(&huart3, delta_packet, 8);
 	}
 }

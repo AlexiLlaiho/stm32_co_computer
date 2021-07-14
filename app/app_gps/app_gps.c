@@ -16,6 +16,7 @@
 extern QueueHandle_t xRGPSQueue;
 extern uint8_t buffer[];
 extern UART_HandleTypeDef huart3;
+extern uint8_t delta_packet[];
 int16_t pgndres;
 uint8_t *qgps;
 
@@ -31,6 +32,7 @@ void StartDefaultTask(void const *argument)
 					uint8_t lenght = 0;
 					uint8_t *p_coordinates_packet = coordinates_packet(&lenght, pgndres);
 					HAL_UART_Transmit_IT(&huart3, p_coordinates_packet, lenght);
+					HAL_UART_Transmit_IT(&huart3, delta_packet, 10);
 			}
 		}
 	}
