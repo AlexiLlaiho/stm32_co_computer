@@ -237,7 +237,10 @@ uint8_t *start_stop_lite(uint8_t *dt_fr_analyze)
 		en_rdlt_byte = true;
 		rdlt_i = 0;
 	}
-	return dlt_gnd_buff;
+	if(en_rdlt_byte == true)
+		return dlt_gnd_buff;
+	else
+		return 0;
 }
 
 uint8_t *switch_buff(uint8_t buff_nmb, uint8_t item_buff, uint8_t *data_to_buff, bool now_change)

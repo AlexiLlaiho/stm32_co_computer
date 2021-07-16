@@ -30,10 +30,10 @@ void StartDeltaGroundTask(void const *argument)
 			if (xQueueReceive(xGRDDTQueue, &(qgnd), (TickType_t) 2) == pdPASS)
 			{
 				pgndres = delta_minus_gps(qgnd);
-				for(uint8_t local_i = 0; local_i < 4; local_i++)
-				{
-					delta_packet[local_i + 6] = *(qgnd + local_i);
-				}
+//				for(uint8_t local_i = 0; local_i < 4; local_i++)
+//				{
+//					delta_packet[local_i + 6] = *(qgnd + local_i);
+//				}
 			}
 		}
 	}
