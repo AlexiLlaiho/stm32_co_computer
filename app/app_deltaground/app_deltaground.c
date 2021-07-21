@@ -20,21 +20,26 @@ extern UART_HandleTypeDef huart3;
 uint8_t *qgnd;
 uint8_t delta_packet[] = {'D', 'e', 'l', 't', 'a', '=', '0', '0','0','0'};
 extern int16_t pgndres;
+extern uint32_t pulseWidth;
 
 void StartDeltaGroundTask(void const *argument)
 {
 	for (;;)
 	{
-		if (xGRDDTQueue != NULL)
-		{
-			if (xQueueReceive(xGRDDTQueue, &(qgnd), (TickType_t) 2) == pdPASS)
-			{
-				pgndres = delta_minus_gps(qgnd);
-//				for(uint8_t local_i = 0; local_i < 4; local_i++)
-//				{
-//					delta_packet[local_i + 6] = *(qgnd + local_i);
-//				}
-			}
-		}
+		if(pulseWidth > 1800)
+			pgndres = -10;
+		else
+			pgndres = 0;
+//		if (xGRDDTQueue != NULL)
+//		{
+//			if (xQueueReceive(xGRDDTQueue, &(qgnd), (TickType_t) 2) == pdPASS)
+//			{
+//				pgndres = delta_minus_gps(qgnd);
+////				for(uint8_t local_i = 0; local_i < 4; local_i++)
+////				{
+////					delta_packet[local_i + 6] = *(qgnd + local_i);
+////				}
+//			}
+//		}
 	}
 }
