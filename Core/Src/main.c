@@ -147,7 +147,7 @@ int main(void)
 //  osThreadDef(ledTask, StartLedTask, osPriorityLow, 0, 128);
 //  ledTaskHandle = osThreadCreate(osThread(ledTask), NULL);
 
-	osThreadDef(groundTask, StartDeltaGroundTask, osPriorityNormal, 0, 256);
+	osThreadDef(groundTask, StartDeltaGroundTask, osPriorityNormal, 0, 512);
 	groundTaskHandle = osThreadCreate(osThread(groundTask), NULL);
 
 	/* USER CODE BEGIN RTOS_THREADS */
@@ -406,37 +406,18 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	uint8_t *p_uart_gps;
-	uint8_t *p_uart_gnd;
 
 	if (huart->Instance == USART1)
 	{
 		p_uart_gps = start_stop(&uart_gps);
 		if (p_uart_gps != 0)
 		{
-			if (xQueueSendFromISR(xRGPSQueue, &p_uart_gps,
-					&xHigherPriorityTaskWoken) == errQUEUE_FULL)
+			if (xQueueSendFromISR(xRGPSQueue, &p_uart_gps, &xHigherPriorityTaskWoken) == errQUEUE_FULL)
 			{
 				asm("nop");
 			}
 		}
-		else
-			asm("nop");
-
 		HAL_UART_Receive_IT(&huart1, &uart_gps, 1);
-	}
-
-	if (huart->Instance == USART3)
-	{
-		p_uart_gnd = start_stop_lite(&rgcs_data);
-		if (p_uart_gnd != 0)
-		{
-			if (xQueueSendFromISR(xGRDDTQueue, &p_uart_gnd,
-					&xHigherPriorityTaskWoken) == pdTRUE)
-			{
-				asm("nop");
-			}
-		}
-		HAL_UART_Receive_IT(&huart3, &rgcs_data, 1);
 	}
 }
 /* USER CODE BEGIN Header_StartTask02 */

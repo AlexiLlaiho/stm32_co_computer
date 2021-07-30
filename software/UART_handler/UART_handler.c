@@ -3,7 +3,7 @@
 /**************** Private variables **********************************/
 bool start_byte = false, end_byte = false;
 bool st_rdlt_byte = false, en_rdlt_byte = false;
-float delta = 0.0;
+float delta_lat = 0.0, delta_lon = 0.0;
 uint8_t temp = 0, rgps_i, buff_numb = 0;
 uint8_t msg_t = 0; // if 1 - RMC's message type or 2 is equivalent GGA
 uint8_t buffer[85], buffer1[85], buffer2[85], dlt_gnd_buff[4], rt_buff[85];
@@ -103,18 +103,19 @@ void GPS_Analyze(uint8_t *Data_from_GPS) /* */
 	}
 }
 
-uint8_t *coordinates_packet(uint8_t *size, int16_t data_frm_gcs)
+uint8_t *coordinates_packet(uint8_t *size, int16_t data_frm_gcs, int16_t data2_frm_gcs)
 {
-	delta = data_frm_gcs * 0.001;
+	delta_lat = data_frm_gcs * 0.001;
+	delta_lon = data2_frm_gcs * 0.001;
 
 	if (msg_t == 1)
 	{
-	sprintf (rt_buff, "$GPRMC,%.3f,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*",
+	sprintf (rt_buff, "$GPRMC,%.3f,%c,%.6f,%c,%.6f,%c,%.2f,%.2f,%d,,,%c*",
  	   	   	  	  	  in_gps_pck.utcTime,
 					  in_gps_pck.status,
-					  in_gps_pck.latitude - delta,
+					  in_gps_pck.latitude - delta_lat,
 					  in_gps_pck.nsIndicator,
-					  in_gps_pck.longitude,
+					  in_gps_pck.longitude - delta_lon,
 					  in_gps_pck.ewIndicator,
 					  in_gps_pck.speedOverGround,
 					  in_gps_pck.courseOverGround,
@@ -122,12 +123,12 @@ uint8_t *coordinates_packet(uint8_t *size, int16_t data_frm_gcs)
 					  in_gps_pck.mode
             		);
 	in_gps_pck.CheckSum = calc_checksum(rt_buff);
-	*size = sprintf (rt_buff, "$GPRMC,%.3f,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*%X\n",
+	*size = sprintf (rt_buff, "$GPRMC,%.3f,%c,%.6f,%c,%.6f,%c,%.2f,%.2f,%d,,,%c*%X\n",
 					in_gps_pck.utcTime,
 					in_gps_pck.status,
-					in_gps_pck.latitude - delta,
+					in_gps_pck.latitude - delta_lat,
 					in_gps_pck.nsIndicator,
-					in_gps_pck.longitude,
+					in_gps_pck.longitude - delta_lon,
 					in_gps_pck.ewIndicator,
 					in_gps_pck.speedOverGround,
 					in_gps_pck.courseOverGround,
@@ -138,11 +139,11 @@ uint8_t *coordinates_packet(uint8_t *size, int16_t data_frm_gcs)
 	}
 	else if(msg_t == 2)
 	{
-		sprintf(rt_buff, "$GPGGA,%.2f,%.4f,%c,%.4f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*",
+		sprintf(rt_buff, "$GPGGA,%.2f,%.6f,%c,%.6f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*",
 				in_gga_pck.utcTime,
-				in_gga_pck.latitude - delta,
+				in_gga_pck.latitude - delta_lat,
 				in_gga_pck.nsIndicator,
-				in_gga_pck.longitude,
+				in_gga_pck.longitude - delta_lon,
 				in_gga_pck.ewIndicator,
 				in_gga_pck.solutiontype,
 				in_gga_pck.satelitenum,
@@ -153,11 +154,11 @@ uint8_t *coordinates_packet(uint8_t *size, int16_t data_frm_gcs)
 				in_gga_pck.geoindicator
 					);
 			in_gps_pck.CheckSum = calc_checksum(rt_buff);
-			*size = sprintf (rt_buff, "$GPGGA,%.2f,%.4f,%c,%.4f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*%X\n",
+			*size = sprintf (rt_buff, "$GPGGA,%.2f,%.6f,%c,%.6f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*%X\n",
 					in_gga_pck.utcTime,
-					in_gga_pck.latitude - delta,
+					in_gga_pck.latitude - delta_lat,
 					in_gga_pck.nsIndicator,
-					in_gga_pck.longitude,
+					in_gga_pck.longitude - delta_lon,
 					in_gga_pck.ewIndicator,
 					in_gga_pck.solutiontype,
 					in_gga_pck.satelitenum,
