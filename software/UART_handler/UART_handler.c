@@ -110,7 +110,7 @@ uint8_t *coordinates_packet(uint8_t *size, int16_t data_frm_gcs, int16_t data2_f
 
 	if (msg_t == 1)
 	{
-	sprintf (rt_buff, "$GPRMC,%.3f,%c,%.6f,%c,%.6f,%c,%.2f,%.2f,%d,,,%c*",
+	sprintf (rt_buff, "$GPRMC,%.3f,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*",
  	   	   	  	  	  in_gps_pck.utcTime,
 					  in_gps_pck.status,
 					  in_gps_pck.latitude - delta_lat,
@@ -123,7 +123,7 @@ uint8_t *coordinates_packet(uint8_t *size, int16_t data_frm_gcs, int16_t data2_f
 					  in_gps_pck.mode
             		);
 	in_gps_pck.CheckSum = calc_checksum(rt_buff);
-	*size = sprintf (rt_buff, "$GPRMC,%.3f,%c,%.6f,%c,%.6f,%c,%.2f,%.2f,%d,,,%c*%X\n",
+	*size = sprintf (rt_buff, "$GPRMC,%.3f,%c,%.4f,%c,%.4f,%c,%.2f,%.2f,%d,,,%c*%X\n",
 					in_gps_pck.utcTime,
 					in_gps_pck.status,
 					in_gps_pck.latitude - delta_lat,
@@ -139,7 +139,7 @@ uint8_t *coordinates_packet(uint8_t *size, int16_t data_frm_gcs, int16_t data2_f
 	}
 	else if(msg_t == 2)
 	{
-		sprintf(rt_buff, "$GPGGA,%.2f,%.6f,%c,%.6f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*",
+		sprintf(rt_buff, "$GPGGA,%.2f,%.4f,%c,%.4f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*",
 				in_gga_pck.utcTime,
 				in_gga_pck.latitude - delta_lat,
 				in_gga_pck.nsIndicator,
@@ -154,7 +154,7 @@ uint8_t *coordinates_packet(uint8_t *size, int16_t data_frm_gcs, int16_t data2_f
 				in_gga_pck.geoindicator
 					);
 			in_gps_pck.CheckSum = calc_checksum(rt_buff);
-			*size = sprintf (rt_buff, "$GPGGA,%.2f,%.6f,%c,%.6f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*%X\n",
+			*size = sprintf (rt_buff, "$GPGGA,%.2f,%.4f,%c,%.4f,%c,%u,%u,%.1f,%.2f,%c,%.3f,%c,,*%X\n",
 					in_gga_pck.utcTime,
 					in_gga_pck.latitude - delta_lat,
 					in_gga_pck.nsIndicator,
