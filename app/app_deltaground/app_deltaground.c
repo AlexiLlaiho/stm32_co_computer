@@ -27,6 +27,9 @@ uint8_t *qgnd;
 TimerHandle_t xPeriodTimer;
 BaseType_t xPeriodTimerState;
 uint8_t step = 0;
+uint8_t wait_time = 0;
+uint8_t req_time = 21;
+int8_t dst_range = 21;
 /******************************************************************************/
 
 /******** Private functions ***************************************************/
@@ -35,9 +38,8 @@ void vTimChangeMotionCallback(xTimerHandle xTimer);
 
 void StartDeltaGroundTask(void const *argument)
 {
-	xPeriodTimer = xTimerCreate("Timer_1", 	20000/portTICK_RATE_MS, pdTRUE, ( void * ) 0, vTimChangeMotionCallback);
-	if(xPeriodTimer == NULL)
-	{
+	xPeriodTimer = xTimerCreate("Timer_1", 	1000/portTICK_RATE_MS, pdTRUE, ( void * ) 0, vTimChangeMotionCallback);
+	if(xPeriodTimer == NULL){
 		asm("nop");
 	}
 
@@ -49,8 +51,7 @@ void StartDeltaGroundTask(void const *argument)
 				asm("nop");
 			}
 			tr_enable = true;
-			dlt_lat = -15;
-			step++;
+			dlt_lat = -1;
 		}
 		else if (pulseWidth < 1000)
 		{
@@ -67,19 +68,37 @@ void StartDeltaGroundTask(void const *argument)
 
 void vTimChangeMotionCallback(xTimerHandle xTimer)
 {
-	if(step == 1)
+	if (step == 0)
 	{
-		dlt_lon = 15;
-		step++;
+
+	}
+	else if (step == 1)
+	{
+
 	}
 	else if (step == 2)
 	{
-		dlt_lat = 0;
-		step++;
+
 	}
 	else if (step == 3)
 	{
-		dlt_lon = 0;
-		step = 0;
+
+	}
+}
+
+void stepper_func(int16_t *coordinate_name, uint8_t num_moving)
+{
+	if (*(coordinate_name) > (dst_range * (-1)))
+		(*(coordinate_name))--;
+	else if (wait_time < req_time)
+		wait_time++;
+	else
+	{
+		if(step < num_moving)
+			step++;
+		else
+			step = 0;
+
+		wait_time = 0;
 	}
 }
