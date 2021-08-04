@@ -23,6 +23,7 @@ extern uint32_t pulseWidth;
 
 /********* Private variables **************************************************/
 bool tr_enable = false;
+bool step_done = false;
 uint8_t *qgnd;
 TimerHandle_t xPeriodTimer;
 BaseType_t xPeriodTimerState;
@@ -34,6 +35,9 @@ int8_t dst_range = 21;
 
 /******** Private functions ***************************************************/
 void vTimChangeMotionCallback(xTimerHandle xTimer);
+void stepper_func(int16_t *coordinate_name, uint8_t num_moving, char direction);
+bool change_direction(int16_t *what_is_changing, char where_is_changing);
+void reset_variables(void);
 /******************************************************************************/
 
 void StartDeltaGroundTask(void const *argument)
@@ -51,7 +55,6 @@ void StartDeltaGroundTask(void const *argument)
 				asm("nop");
 			}
 			tr_enable = true;
-			dlt_lat = -1;
 		}
 		else if (pulseWidth < 1000)
 		{
@@ -59,8 +62,7 @@ void StartDeltaGroundTask(void const *argument)
 				asm("nop");
 			}
 			tr_enable = false;
-			dlt_lat = 0;
-			dlt_lon = 0;
+			reset_variables();
 		}
 	vTaskDelay(10);
 	}
@@ -68,37 +70,87 @@ void StartDeltaGroundTask(void const *argument)
 
 void vTimChangeMotionCallback(xTimerHandle xTimer)
 {
-	if (step == 0)
-	{
-
+	if (step == 0){
+		stepper_func(&dlt_lat, 8, 'N');
 	}
-	else if (step == 1)
-	{
-
+	else if (step == 1)	{
+		stepper_func(&dlt_lat, 8, 'B');
 	}
-	else if (step == 2)
-	{
-
+	else if (step == 2)	{
+		stepper_func(&dlt_lat, 8, 'S');
 	}
-	else if (step == 3)
-	{
-
+	else if (step == 3)	{
+		stepper_func(&dlt_lat, 8, 'B');
+	}
+	else if (step == 4)	{
+		stepper_func(&dlt_lon, 8, 'W');
+	}
+	else if (step == 5)	{
+		stepper_func(&dlt_lon, 8, 'B');
+	}
+	else if (step == 6)	{
+		stepper_func(&dlt_lon, 8, 'E');
+	}
+	else if (step == 7)	{
+		stepper_func(&dlt_lon, 8, 'B');
 	}
 }
 
-void stepper_func(int16_t *coordinate_name, uint8_t num_moving)
+void stepper_func(int16_t *coordinate_name, uint8_t num_moving, char direction)
 {
-	if (*(coordinate_name) > (dst_range * (-1)))
-		(*(coordinate_name))--;
-	else if (wait_time < req_time)
+	if((change_direction(coordinate_name, direction) == true) &&  (wait_time < req_time))
 		wait_time++;
-	else
+	if(wait_time == req_time)
 	{
-		if(step < num_moving)
+		step_done = false;
+		if(step < (num_moving - 1))
 			step++;
 		else
 			step = 0;
 
 		wait_time = 0;
 	}
+}
+
+bool change_direction(int16_t *what_is_changing, char where_is_changing)
+{
+	if (((where_is_changing == 'N') || (where_is_changing == 'E')) && ( *(what_is_changing) > (dst_range * (-1))) )
+	{
+		(*(what_is_changing))--;
+	}
+	else if (((where_is_changing == 'N') || (where_is_changing == 'E')) && ( *(what_is_changing) == (dst_range * (-1))) )
+	{
+		step_done = true;
+	}
+
+	if (((where_is_changing == 'S') || (where_is_changing == 'W')) && ( *(what_is_changing) < dst_range) )
+	{
+		(*(what_is_changing))++;
+	}
+	else if (((where_is_changing == 'S') || (where_is_changing == 'W')) && ( *(what_is_changing) == dst_range) )
+	{
+		step_done = true;
+	}
+
+	if ((where_is_changing == 'B') && (*(what_is_changing) != 0))
+	{
+		if(*(what_is_changing) > 0)
+			(*(what_is_changing))--;
+		else
+			(*(what_is_changing))++;
+	}
+	else if ((where_is_changing == 'B') && (*(what_is_changing) == 0))
+	{
+		step_done = true;
+	}
+
+	return step_done;
+}
+
+void reset_variables(void)
+{
+	dlt_lat = 0;
+	dlt_lon = 0;
+	step = 0;
+	wait_time = 0;
 }
